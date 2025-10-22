@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base application theme (only used for splash/launch) -->
+    <style name="Theme.YogaTimer" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Splash screen background -->
+        <item name="android:windowBackground">@color/purple_500</item>
+        <item name="android:statusBarColor">@color/purple_500</item>
+    </style>
+</resources>

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Yoga Timer</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_create_workout">Create Workout</string>
+    <string name="nav_edit_workout">Edit Workout</string>
+    <string name="nav_active_timer">Active Timer</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Common -->
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="add">Add</string>
+    <string name="done">Done</string>
+
+    <!-- Home Screen -->
+    <string name="no_workouts_title">No workouts yet</string>
+    <string name="no_workouts_subtitle">Tap + to create your first workout</string>
+    <string name="exercises_count">%d exercises</string>
+    <string name="duration_minutes">%d min</string>
+    <string name="delete_workout_confirmation">Are you sure you want to delete this workout?</string>
+
+    <!-- Create/Edit Workout -->
+    <string name="workout_name">Workout Name</string>
+    <string name="workout_name_required">Name is required</string>
+    <string name="description_optional">Description (optional)</string>
+    <string name="sections">Sections</string>
+    <string name="add_section">Add Section</string>
+    <string name="add_timer">Add Timer</string>
+    <string name="section_name">Section Name</string>
+    <string name="repeat_count">Repeat Count</string>
+    <string name="timer_name">Timer Name</string>
+    <string name="duration">Duration</string>
+
+    <!-- Active Timer -->
+    <string name="repeat_format">Repeat %d of %d</string>
+    <string name="exercise_format">Exercise %d of %d</string>
+    <string name="time_format">%d:%02d</string>
+    <string name="time_elapsed_format">%s / %s</string>
+    <string name="pause">Pause</string>
+    <string name="resume">Resume</string>
+    <string name="skip">Skip</string>
+    <string name="stop">Stop</string>
+    <string name="workout_complete">Workout Complete!</string>
+    <string name="workout_complete_message">Great job! You\'ve completed your workout.</string>
+
+    <!-- Settings -->
+    <string name="settings_display">Display</string>
+    <string name="settings_audio">Audio</string>
+    <string name="settings_haptics">Haptics</string>
+    <string name="settings_about">About</string>
+    <string name="keep_screen_on">Keep screen on</string>
+    <string name="theme">Theme</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_system">System</string>
+    <string name="text_to_speech">Text-to-Speech</string>
+    <string name="sound_effects">Sound effects</string>
+    <string name="completion_sound">Completion sound</string>
+    <string name="volume">Volume</string>
+    <string name="vibration">Vibration</string>
+    <string name="version">Version</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_name">Timer</string>
+    <string name="notification_channel_description">Workout timer notifications</string>
+    <string name="notification_title_starting">Yoga Timer</string>
+    <string name="notification_text_starting">Starting workout…</string>
+    <string name="notification_title_paused">%s (Paused)</string>
+    <string name="notification_action_pause">Pause</string>
+    <string name="notification_action_resume">Resume</string>
+    <string name="notification_action_skip">Skip</string>
+    <string name="notification_action_stop">Stop</string>
+
+    <!-- TTS Announcements -->
+    <string name="tts_repeat_times">Repeat %d times.</string>
+
+    <!-- Content Descriptions -->
+    <string name="cd_more_options">More options</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_create_workout">Create workout</string>
+    <string name="cd_reorder">Reorder</string>
+    <string name="cd_timer_remaining">Timer: %s remaining</string>
+</resources>
