@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Background -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#6750A4"/>
+        </shape>
+    </item>
+    <!-- Foreground - Timer Icon -->
+    <item
+        android:width="72dp"
+        android:height="72dp"
+        android:gravity="center">
+        <vector
+            android:width="72dp"
+            android:height="72dp"
+            android:viewportWidth="108"
+            android:viewportHeight="108">
+            <group
+                android:scaleX="0.7"
+                android:scaleY="0.7"
+                android:translateX="16.2"
+                android:translateY="16.2">
+                <path
+                    android:fillColor="#FFFFFF"
+                    android:pathData="M54,4C25.1,4 2,27.1 2,56s23.1,52 52,52s52,-23.1 52,-52S82.9,4 54,4zM54,100c-24.3,0 -44,-19.7 -44,-44s19.7,-44 44,-44s44,19.7 44,44S78.3,100 54,100z"/>
+                <path
+                    android:fillColor="#FFFFFF"
+                    android:pathData="M58,30h-8v30l26,15.6l4,-6.6l-22,-13.1z"/>
+            </group>
+        </vector>
+    </item>
+</layer-list>
