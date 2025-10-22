@@ -40,9 +40,9 @@ sealed class TimerState {
     fun isActive(): Boolean = this is Running || this is Paused
 
     /**
-     * Get current timer if active
+     * Get current timer if active, null otherwise
      */
-    fun getCurrentTimer(): Timer? {
+    fun getTimerOrNull(): Timer? {
         return when (this) {
             is Running -> currentTimer
             is Paused -> currentTimer
@@ -51,9 +51,9 @@ sealed class TimerState {
     }
 
     /**
-     * Get remaining seconds if active
+     * Get remaining seconds if active, null otherwise
      */
-    fun getRemainingSeconds(): Int? {
+    fun getSecondsRemaining(): Int? {
         return when (this) {
             is Running -> remainingSeconds
             is Paused -> remainingSeconds
