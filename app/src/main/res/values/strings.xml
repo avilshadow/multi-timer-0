@@ -18,6 +18,8 @@
     <string name="done">Done</string>
 
     <!-- Home Screen -->
+    <string name="home_empty_title">No workouts yet</string>
+    <string name="home_empty_subtitle">Tap + to create your first workout</string>
     <string name="no_workouts_title">No workouts yet</string>
     <string name="no_workouts_subtitle">Tap + to create your first workout</string>
     <string name="exercises_count">%d exercises</string>
