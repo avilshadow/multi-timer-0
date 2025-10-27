@@ -6,6 +6,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.yogatimer.app.presentation.create.CreateWorkoutScreen
 import com.yogatimer.app.presentation.home.HomeScreen
 
 /**
@@ -57,14 +58,12 @@ fun AppNavGraph(
 
         // Create Workout Screen
         composable(NavRoutes.CREATE_WORKOUT) {
-            // TODO: Implement CreateWorkoutScreen
-            // CreateWorkoutScreen(
-            //     onBack = { navController.popBackStack() },
-            //     onSaved = { navController.popBackStack() }
-            // )
+            CreateWorkoutScreen(
+                onBack = { navController.popBackStack() }
+            )
         }
 
-        // Edit Workout Screen
+        // Edit Workout Screen (reuses CreateWorkoutScreen)
         composable(
             route = NavRoutes.EDIT_WORKOUT,
             arguments = listOf(
@@ -74,12 +73,9 @@ fun AppNavGraph(
             )
         ) { backStackEntry ->
             val workoutId = backStackEntry.arguments?.getLong("workoutId") ?: return@composable
-            // TODO: Implement EditWorkoutScreen
-            // EditWorkoutScreen(
-            //     workoutId = workoutId,
-            //     onBack = { navController.popBackStack() },
-            //     onSaved = { navController.popBackStack() }
-            // )
+            CreateWorkoutScreen(
+                onBack = { navController.popBackStack() }
+            )
         }
 
         // Active Timer Screen
