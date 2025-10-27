@@ -33,7 +33,7 @@
             </intent-filter>
         </activity>
 
-        <!-- Timer Foreground Service -->
+        <!-- TODO: Uncomment when implementing timer service
         <service
             android:name=".service.timer.TimerForegroundService"
             android:enabled="true"
@@ -44,11 +44,11 @@
                 android:value="Timer for yoga and meditation workouts" />
         </service>
 
-        <!-- Timer Action Receiver -->
         <receiver
             android:name=".service.notification.TimerActionReceiver"
             android:enabled="true"
             android:exported="false" />
+        -->
 
     </application>
 
