@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.yogatimer.app.presentation.create.CreateWorkoutScreen
 import com.yogatimer.app.presentation.home.HomeScreen
+import com.yogatimer.app.presentation.timer.ActiveTimerScreen
 
 /**
  * Navigation routes for the app.
@@ -88,12 +89,9 @@ fun AppNavGraph(
             )
         ) { backStackEntry ->
             val workoutId = backStackEntry.arguments?.getLong("workoutId") ?: return@composable
-            // TODO: Implement ActiveTimerScreen
-            // ActiveTimerScreen(
-            //     workoutId = workoutId,
-            //     onBack = { navController.popBackStack() },
-            //     onComplete = { navController.popBackStack() }
-            // )
+            ActiveTimerScreen(
+                onBack = { navController.popBackStack() }
+            )
         }
 
         // Settings Screen
