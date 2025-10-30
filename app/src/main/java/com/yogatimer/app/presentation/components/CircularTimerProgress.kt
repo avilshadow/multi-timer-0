@@ -64,6 +64,10 @@ fun CircularTimerProgress(
         label = "timer_progress"
     )
 
+    // Get colors outside Canvas (Canvas doesn't have access to composition locals)
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val trackColor = MaterialTheme.colorScheme.surfaceVariant
+
     Box(
         modifier = modifier.size(280.dp),
         contentAlignment = Alignment.Center
@@ -71,7 +75,7 @@ fun CircularTimerProgress(
         // Background circle (track)
         Canvas(modifier = Modifier.fillMaxSize()) {
             drawCircle(
-                color = Color.LightGray.copy(alpha = 0.3f),
+                color = trackColor,
                 radius = size.minDimension / 2,
                 style = Stroke(width = 12.dp.toPx(), cap = StrokeCap.Round)
             )
@@ -80,7 +84,7 @@ fun CircularTimerProgress(
         // Progress circle (indicator)
         Canvas(modifier = Modifier.fillMaxSize()) {
             drawArc(
-                color = androidx.compose.ui.graphics.Color(0xFF6750A4), // Primary purple
+                color = primaryColor,
                 startAngle = -90f, // Start from top
                 sweepAngle = 360f * animatedProgress,
                 useCenter = false,
