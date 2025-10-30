@@ -74,7 +74,7 @@ fun SectionRepeatProgress(
             }
 
             LinearProgressIndicator(
-                progress = { totalProgress },
+                progress = totalProgress,
                 modifier = Modifier
                     .fillMaxSize()
                     .clip(RoundedCornerShape(6.dp)),
@@ -99,7 +99,7 @@ fun SectionRepeatProgress(
             val combinedProgress = totalProgress + incrementProgress
 
             LinearProgressIndicator(
-                progress = { combinedProgress },
+                progress = combinedProgress,
                 modifier = Modifier
                     .fillMaxSize()
                     .clip(RoundedCornerShape(6.dp)),
@@ -167,7 +167,7 @@ fun OverallWorkoutProgress(
         }
 
         LinearProgressIndicator(
-            progress = { progress },
+            progress = progress,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(8.dp)

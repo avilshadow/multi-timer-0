@@ -13,7 +13,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -51,14 +50,23 @@ class CreateWorkoutViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             try {
-                val workout = getWorkoutByIdUseCase(id).first()
-                _uiState.update {
-                    it.copy(
-                        name = workout.name,
-                        description = workout.description,
-                        sections = workout.sections.toMutableList(),
-                        isLoading = false
-                    )
+                val workout = getWorkoutByIdUseCase(id)
+                if (workout != null) {
+                    _uiState.update {
+                        it.copy(
+                            name = workout.name,
+                            description = workout.description,
+                            sections = workout.sections.toMutableList(),
+                            isLoading = false
+                        )
+                    }
+                } else {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = "Workout not found"
+                        )
+                    }
                 }
             } catch (e: Exception) {
                 _uiState.update {
@@ -115,6 +123,7 @@ class CreateWorkoutViewModel @Inject constructor(
     fun addSection(name: String, description: String, repeatCount: Int) {
         val newSection = Section(
             id = 0, // Will be assigned by database
+            workoutId = workoutId ?: 0,
             name = name,
             description = description,
             repeatCount = repeatCount,
@@ -149,8 +158,10 @@ class CreateWorkoutViewModel @Inject constructor(
      * Add new timer with given properties.
      */
     fun addTimer(name: String, description: String, durationSeconds: Int) {
+        val parentSection = _uiState.value.parentSectionForNewItem
         val newTimer = Timer(
             id = 0, // Will be assigned by database
+            sectionId = parentSection?.id ?: 0,
             name = name,
             description = description,
             durationSeconds = durationSeconds
