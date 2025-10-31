@@ -1,19 +1,37 @@
 package com.yogatimer.app.presentation.timer
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -29,37 +47,26 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.yogatimer.app.R
+import com.yogatimer.app.domain.model.FlattenedTimer
 import com.yogatimer.app.domain.model.TimerState
-import com.yogatimer.app.presentation.components.CircularTimerProgress
-import com.yogatimer.app.presentation.components.OverallWorkoutProgress
-import com.yogatimer.app.presentation.components.SectionRepeatProgress
-import com.yogatimer.app.presentation.components.TimerControls
+import com.yogatimer.app.util.TimeFormatter
 
 /**
- * Active Timer Screen displaying running workout.
+ * Active Timer Screen with workout execution and timer list.
  *
- * Design Specifications (from DESIGN_SYSTEM.md):
- * - Section name: headlineMedium, Bold
- * - Section repeat progress: 12dp height, dual-layer
- * - Circular timer: 280dp diameter, animated
- * - Timer name: titleLarge
- * - Controls: 64dp touch targets, 24dp spacing
- * - Overall progress: 8dp height, secondary color
- * - Vertical spacing: 24dp, 32dp as specified
- *
- * Layout:
- * - All content centered horizontally
- * - Max width: 360dp on tablets
- * - Safe area padding: 24dp top/bottom
- *
- * @param onBack Callback to navigate back
- * @param viewModel ActiveTimerViewModel instance
+ * Features:
+ * - Shows list of all timers with progress
+ * - Start button when workout is idle
+ * - Click current timer to pause/unpause
+ * - Click other timer to jump to it
+ * - Visual indicators for completed/current/upcoming timers
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,6 +77,7 @@ fun ActiveTimerScreen(
     val uiState by viewModel.uiState.collectAsState()
     val timerState by viewModel.timerState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val listState = rememberLazyListState()
 
     // Handle navigation
     LaunchedEffect(uiState.shouldNavigateBack) {
@@ -87,6 +95,20 @@ fun ActiveTimerScreen(
         }
     }
 
+    // Auto-scroll to current timer
+    LaunchedEffect(timerState) {
+        if (timerState is TimerState.Running || timerState is TimerState.Paused) {
+            val currentIndex = when (timerState) {
+                is TimerState.Running -> (timerState as TimerState.Running).overallProgress.currentTimerGlobal - 1
+                is TimerState.Paused -> (timerState as TimerState.Paused).overallProgress.currentTimerGlobal - 1
+                else -> 0
+            }
+            if (currentIndex >= 0) {
+                listState.animateScrollToItem(currentIndex)
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -97,7 +119,13 @@ fun ActiveTimerScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { viewModel.onStopRequest() }) {
+                    IconButton(onClick = {
+                        if (timerState.isActive()) {
+                            viewModel.onStopRequest()
+                        } else {
+                            onBack()
+                        }
+                    }) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.cd_back)
@@ -123,14 +151,6 @@ fun ActiveTimerScreen(
                     )
                 }
 
-                timerState is TimerState.Idle -> {
-                    // This shouldn't normally happen
-                    Text(
-                        text = "Timer not started",
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-
                 timerState is TimerState.Completed -> {
                     WorkoutCompletedContent(
                         workoutName = uiState.workout?.name ?: "",
@@ -140,12 +160,14 @@ fun ActiveTimerScreen(
                 }
 
                 else -> {
-                    // Running or Paused state
-                    ActiveTimerContent(
+                    // Show timer list with controls
+                    TimerListContent(
+                        workout = uiState.workout,
                         timerState = timerState,
+                        listState = listState,
+                        onStart = viewModel::onStart,
                         onPauseResume = viewModel::onPauseResume,
-                        onSkip = viewModel::onSkip,
-                        onStop = { viewModel.onStopRequest() }
+                        onJumpToTimer = viewModel::onJumpToTimer
                     )
                 }
             }
@@ -162,124 +184,218 @@ fun ActiveTimerScreen(
 }
 
 @Composable
-private fun ActiveTimerContent(
+private fun TimerListContent(
+    workout: com.yogatimer.app.domain.model.Workout?,
     timerState: TimerState,
+    listState: androidx.compose.foundation.lazy.LazyListState,
+    onStart: () -> Unit,
     onPauseResume: () -> Unit,
-    onSkip: () -> Unit,
-    onStop: () -> Unit
+    onJumpToTimer: (Int) -> Unit
 ) {
-    // Extract data from state
-    val section = when (timerState) {
-        is TimerState.Running -> timerState.currentSection
-        is TimerState.Paused -> timerState.currentSection
-        else -> return
-    }
+    if (workout == null) return
 
-    val timer = when (timerState) {
-        is TimerState.Running -> timerState.currentTimer
-        is TimerState.Paused -> timerState.currentTimer
-        else -> return
+    val flattenedTimers = workout.getAllTimersFlattened()
+    val currentTimerIndex = when (timerState) {
+        is TimerState.Running -> timerState.overallProgress.currentTimerGlobal - 1
+        is TimerState.Paused -> timerState.overallProgress.currentTimerGlobal - 1
+        else -> -1
     }
-
-    val remainingSeconds = when (timerState) {
-        is TimerState.Running -> timerState.remainingSeconds
-        is TimerState.Paused -> timerState.remainingSeconds
-        else -> return
-    }
-
-    val sectionProgress = when (timerState) {
-        is TimerState.Running -> timerState.sectionProgress
-        is TimerState.Paused -> timerState.sectionProgress
-        else -> return
-    }
-
-    val overallProgress = when (timerState) {
-        is TimerState.Running -> timerState.overallProgress
-        is TimerState.Paused -> timerState.overallProgress
-        else -> return
-    }
-
-    val isRunning = timerState is TimerState.Running
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
+        modifier = Modifier.fillMaxSize()
     ) {
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Section name
-        Text(
-            text = section.name,
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Section repeat progress (if section has repeats)
-        if (sectionProgress.totalRepeats > 1) {
-            SectionRepeatProgress(
-                currentRepeat = sectionProgress.currentRepeat,
-                totalRepeats = sectionProgress.totalRepeats,
-                currentTimerIndex = sectionProgress.currentTimerIndex,
-                totalTimers = sectionProgress.totalTimers
-            )
-            Spacer(modifier = Modifier.height(24.dp))
-        } else {
-            Spacer(modifier = Modifier.height(12.dp))
+        // Start button (when Idle)
+        if (timerState is TimerState.Idle) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Button(
+                    onClick = onStart,
+                    modifier = Modifier.fillMaxWidth(0.6f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Start Workout")
+                }
+            }
         }
 
-        // Circular timer progress
-        CircularTimerProgress(
-            remainingSeconds = remainingSeconds,
-            totalSeconds = timer.durationSeconds
+        // Timer list
+        LazyColumn(
+            state = listState,
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            itemsIndexed(
+                items = flattenedTimers,
+                key = { index, _ -> index }
+            ) { index, flattenedTimer ->
+                TimerListItem(
+                    flattenedTimer = flattenedTimer,
+                    index = index,
+                    isCurrent = index == currentTimerIndex,
+                    isCompleted = index < currentTimerIndex,
+                    timerState = timerState,
+                    onClick = {
+                        if (index == currentTimerIndex && timerState.isActive()) {
+                            // Click on current timer = pause/unpause
+                            onPauseResume()
+                        } else if (timerState.isActive() || timerState is TimerState.Idle) {
+                            // Click on other timer = jump to it
+                            onJumpToTimer(index)
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TimerListItem(
+    flattenedTimer: FlattenedTimer,
+    index: Int,
+    isCurrent: Boolean,
+    isCompleted: Boolean,
+    timerState: TimerState,
+    onClick: () -> Unit
+) {
+    val timer = flattenedTimer.timer
+    val section = flattenedTimer.section
+
+    // Calculate progress for current timer
+    val progress = if (isCurrent && (timerState is TimerState.Running || timerState is TimerState.Paused)) {
+        val remaining = when (timerState) {
+            is TimerState.Running -> timerState.remainingSeconds
+            is TimerState.Paused -> timerState.remainingSeconds
+            else -> timer.durationSeconds
+        }
+        1f - (remaining.toFloat() / timer.durationSeconds.toFloat())
+    } else if (isCompleted) {
+        1f
+    } else {
+        0f
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = when {
+                isCurrent -> MaterialTheme.colorScheme.primaryContainer
+                isCompleted -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                else -> MaterialTheme.colorScheme.surfaceVariant
+            }
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isCurrent) 4.dp else 1.dp
         )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Status indicator
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(
+                        when {
+                            isCompleted -> MaterialTheme.colorScheme.primary
+                            isCurrent -> MaterialTheme.colorScheme.primary
+                            else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                        }
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                when {
+                    isCompleted -> Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    isCurrent -> Text(
+                        text = (index + 1).toString(),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        fontWeight = FontWeight.Bold
+                    )
+                    else -> Text(
+                        text = (index + 1).toString(),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
 
-        Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
-        // Timer name
-        Text(
-            text = timer.name,
-            style = MaterialTheme.typography.titleLarge,
-            textAlign = TextAlign.Center
-        )
+            // Timer info
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                // Section name (if first timer in section or section has repeats)
+                if (flattenedTimer.sectionRepeat > 1) {
+                    Text(
+                        text = "${section.name} (×${flattenedTimer.sectionRepeat}/${flattenedTimer.totalSectionRepeats})",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
 
-        // Timer description (if present)
-        if (timer.description.isNotBlank()) {
-            Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = timer.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
+                    color = if (isCurrent) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                )
+
+                // Progress bar
+                if (progress > 0f) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    LinearProgressIndicator(
+                        progress = progress,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp)),
+                        color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Duration
             Text(
-                text = timer.description,
+                text = if (isCurrent && (timerState is TimerState.Running || timerState is TimerState.Paused)) {
+                    val remaining = when (timerState) {
+                        is TimerState.Running -> timerState.remainingSeconds
+                        is TimerState.Paused -> timerState.remainingSeconds
+                        else -> timer.durationSeconds
+                    }
+                    TimeFormatter.formatTime(remaining)
+                } else {
+                    TimeFormatter.formatTime(timer.durationSeconds)
+                },
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
+                fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
+                color = if (isCurrent) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Control buttons
-        TimerControls(
-            isRunning = isRunning,
-            onPauseResume = onPauseResume,
-            onSkip = onSkip,
-            onStop = onStop
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Overall progress
-        OverallWorkoutProgress(
-            currentExercise = overallProgress.currentTimerGlobal,
-            totalExercises = overallProgress.totalTimersGlobal,
-            elapsedSeconds = overallProgress.elapsedSeconds,
-            totalSeconds = overallProgress.totalSeconds
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
@@ -293,7 +409,6 @@ private fun WorkoutCompletedContent(
         modifier = modifier.padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Checkmark emoji
         Text(
             text = "✅",
             style = MaterialTheme.typography.displayLarge
@@ -319,9 +434,7 @@ private fun WorkoutCompletedContent(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        androidx.compose.material3.Button(
-            onClick = onDone
-        ) {
+        Button(onClick = onDone) {
             Text(stringResource(R.string.done))
         }
     }
