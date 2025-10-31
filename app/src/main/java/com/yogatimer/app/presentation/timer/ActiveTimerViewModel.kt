@@ -41,7 +41,7 @@ class ActiveTimerViewModel @Inject constructor(
     }
 
     /**
-     * Load workout from database and start timer.
+     * Load workout from database (but don't start yet).
      */
     private fun loadAndStartWorkout() {
         viewModelScope.launch {
@@ -56,8 +56,8 @@ class ActiveTimerViewModel @Inject constructor(
                             isLoading = false
                         )
                     }
-                    // Start the workout
-                    timerManager.startWorkout(workout, viewModelScope)
+                    // Load the workout (but don't start - wait for user to click Start button)
+                    timerManager.loadWorkout(workout, viewModelScope)
                 } else {
                     _uiState.update {
                         it.copy(
@@ -75,6 +75,20 @@ class ActiveTimerViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    /**
+     * Start the loaded workout.
+     */
+    fun onStart() {
+        timerManager.start()
+    }
+
+    /**
+     * Jump to a specific timer.
+     */
+    fun onJumpToTimer(index: Int) {
+        timerManager.jumpToTimer(index)
     }
 
     /**

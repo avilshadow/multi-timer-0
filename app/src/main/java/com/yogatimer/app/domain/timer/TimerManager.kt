@@ -52,12 +52,12 @@ class TimerManager @Inject constructor() {
     private var timerScope: CoroutineScope? = null
 
     /**
-     * Start a workout from the beginning.
+     * Load a workout and prepare it (but don't start yet).
      *
-     * @param workout The workout to execute
+     * @param workout The workout to load
      * @param scope CoroutineScope for countdown coroutines
      */
-    fun startWorkout(workout: Workout, scope: CoroutineScope) {
+    fun loadWorkout(workout: Workout, scope: CoroutineScope) {
         // Stop any existing workout
         stop()
 
@@ -68,8 +68,19 @@ class TimerManager @Inject constructor() {
         currentTimerIndex = 0
         totalElapsedSeconds = 0
 
-        if (flattenedTimers.isEmpty()) {
-            _state.value = TimerState.Completed
+        // Stay in Idle state - wait for explicit start
+        _state.value = TimerState.Idle
+    }
+
+    /**
+     * Start the workout (must call loadWorkout first).
+     */
+    fun start() {
+        if (currentWorkout == null || flattenedTimers.isEmpty()) {
+            return
+        }
+
+        if (_state.value != TimerState.Idle) {
             return
         }
 
@@ -219,11 +230,40 @@ class TimerManager @Inject constructor() {
         currentTimerIndex++
 
         if (currentTimerIndex >= flattenedTimers.size) {
-            // All timers completed
+            // All timers completed - reset to Idle so workout can be run again
+            stopCountdown()
             _state.value = TimerState.Completed
+            currentWorkout = null
+            flattenedTimers = emptyList()
+            currentTimerIndex = 0
+            remainingSeconds = 0
+            totalElapsedSeconds = 0
         } else {
             // Start next timer
             startCurrentTimer()
         }
+    }
+
+    /**
+     * Jump to a specific timer by index.
+     *
+     * @param index The flattened timer index to jump to (0-based)
+     */
+    fun jumpToTimer(index: Int) {
+        if (index < 0 || index >= flattenedTimers.size) {
+            return
+        }
+
+        stopCountdown()
+        currentTimerIndex = index
+
+        // Recalculate elapsed time up to this point
+        totalElapsedSeconds = 0
+        for (i in 0 until currentTimerIndex) {
+            totalElapsedSeconds += flattenedTimers[i].timer.durationSeconds
+        }
+
+        // Start the selected timer
+        startCurrentTimer()
     }
 }
