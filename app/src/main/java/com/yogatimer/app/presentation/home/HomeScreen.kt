@@ -176,16 +176,6 @@ fun HomeScreen(
         }
     }
 
-    // Workout context menu
-    uiState.workoutMenuTarget?.let { workout ->
-        WorkoutContextMenu(
-            workout = workout,
-            onDismiss = { viewModel.dismissWorkoutMenu() },
-            onEdit = { viewModel.onEditWorkout(workout) },
-            onDelete = { viewModel.onDeleteWorkoutRequest(workout) }
-        )
-    }
-
     // Delete confirmation dialog
     uiState.workoutToDelete?.let { workout ->
         DeleteConfirmationDialog(
@@ -217,7 +207,8 @@ private fun WorkoutList(
                 workout = workout,
                 progress = null, // TODO: Get actual progress from active sessions
                 onClick = { onWorkoutClick(workout) },
-                onMoreClick = { onWorkoutMoreClick(workout) }
+                onEdit = { viewModel.onEditWorkout(workout) },
+                onDelete = { viewModel.onDeleteWorkoutRequest(workout) }
             )
         }
     }
@@ -252,28 +243,6 @@ private fun EmptyState(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 8.dp)
-        )
-    }
-}
-
-@Composable
-private fun WorkoutContextMenu(
-    workout: Workout,
-    onDismiss: () -> Unit,
-    onEdit: () -> Unit,
-    onDelete: () -> Unit
-) {
-    DropdownMenu(
-        expanded = true,
-        onDismissRequest = onDismiss
-    ) {
-        DropdownMenuItem(
-            text = { Text("Edit") },
-            onClick = onEdit
-        )
-        DropdownMenuItem(
-            text = { Text("Delete") },
-            onClick = onDelete
         )
     }
 }

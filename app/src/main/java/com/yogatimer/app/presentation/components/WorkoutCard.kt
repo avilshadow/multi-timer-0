@@ -3,6 +3,7 @@ package com.yogatimer.app.presentation.components
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,12 +16,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,7 +54,8 @@ import com.yogatimer.app.util.TimeFormatter
  * @param workout The workout to display
  * @param progress Optional progress value (0.0 to 1.0), null if not started
  * @param onClick Callback when card is clicked
- * @param onMoreClick Callback when more options is clicked
+ * @param onEdit Callback when edit is selected
+ * @param onDelete Callback when delete is selected
  * @param modifier Optional modifier
  */
 @OptIn(ExperimentalFoundationApi::class)
@@ -56,15 +64,18 @@ fun WorkoutCard(
     workout: Workout,
     progress: Float? = null,
     onClick: () -> Unit,
-    onMoreClick: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var showMenu by remember { mutableStateOf(false) }
+
     Card(
         modifier = modifier
             .fillMaxWidth()
             .combinedClickable(
                 onClick = onClick,
-                onLongClick = onMoreClick
+                onLongClick = { showMenu = true }
             ),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
@@ -90,15 +101,39 @@ fun WorkoutCard(
                     modifier = Modifier.weight(1f)
                 )
 
-                IconButton(
-                    onClick = onMoreClick,
-                    modifier = Modifier.size(24.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = "More options",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                // Menu anchor box
+                Box {
+                    IconButton(
+                        onClick = { showMenu = true },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "More options",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    // Dropdown menu anchored to IconButton
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Edit") },
+                            onClick = {
+                                showMenu = false
+                                onEdit()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Delete") },
+                            onClick = {
+                                showMenu = false
+                                onDelete()
+                            }
+                        )
+                    }
                 }
             }
 
@@ -106,7 +141,6 @@ fun WorkoutCard(
 
             // Exercise count and duration
             val totalTimers = workout.calculateTotalTimers()
-            val durationMinutes = workout.calculateTotalDuration() / 60
             val durationFormatted = TimeFormatter.formatDuration(workout.calculateTotalDuration())
 
             Text(
