@@ -169,7 +169,8 @@ fun HomeScreen(
                     WorkoutList(
                         workouts = uiState.workouts,
                         onWorkoutClick = { viewModel.onWorkoutClick(it) },
-                        onWorkoutMoreClick = { viewModel.onWorkoutMoreClick(it) }
+                        onWorkoutEdit = { viewModel.onEditWorkout(it) },
+                        onWorkoutDelete = { viewModel.onDeleteWorkoutRequest(it) }
                     )
                 }
             }
@@ -190,7 +191,8 @@ fun HomeScreen(
 private fun WorkoutList(
     workouts: List<Workout>,
     onWorkoutClick: (Workout) -> Unit,
-    onWorkoutMoreClick: (Workout) -> Unit
+    onWorkoutEdit: (Workout) -> Unit,
+    onWorkoutDelete: (Workout) -> Unit
 ) {
     LazyColumn(
         contentPadding = PaddingValues(
@@ -207,8 +209,8 @@ private fun WorkoutList(
                 workout = workout,
                 progress = null, // TODO: Get actual progress from active sessions
                 onClick = { onWorkoutClick(workout) },
-                onEdit = { viewModel.onEditWorkout(workout) },
-                onDelete = { viewModel.onDeleteWorkoutRequest(workout) }
+                onEdit = { onWorkoutEdit(workout) },
+                onDelete = { onWorkoutDelete(workout) }
             )
         }
     }
