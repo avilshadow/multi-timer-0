@@ -25,25 +25,19 @@ object DatabaseModule {
     fun provideYogaTimerDatabase(
         @ApplicationContext context: Context
     ): YogaTimerDatabase {
-        val database = Room.databaseBuilder(
+        // Use lazy initialization to avoid circular dependency
+        lateinit var database: YogaTimerDatabase
+
+        database = Room.databaseBuilder(
             context,
             YogaTimerDatabase::class.java,
             Constants.DATABASE_NAME
         )
+            .addCallback(DatabaseCallback { database })
             .fallbackToDestructiveMigration()
             .build()
 
-        // Add callback for prepopulation
-        val callbackDatabase = Room.databaseBuilder(
-            context,
-            YogaTimerDatabase::class.java,
-            Constants.DATABASE_NAME
-        )
-            .addCallback(DatabaseCallback(database))
-            .fallbackToDestructiveMigration()
-            .build()
-
-        return callbackDatabase
+        return database
     }
 
     @Provides

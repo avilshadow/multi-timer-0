@@ -8,7 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class DatabaseCallback(
-    private val database: YogaTimerDatabase
+    private val databaseProvider: () -> YogaTimerDatabase
 ) : RoomDatabase.Callback() {
 
     override fun onCreate(db: SupportSQLiteDatabase) {
@@ -21,6 +21,8 @@ class DatabaseCallback(
     }
 
     private suspend fun prepopulateDatabase() {
+        val database = databaseProvider()
+
         // Insert default settings
         database.settingsDao().saveSettings(SettingsEntity())
 
@@ -30,6 +32,7 @@ class DatabaseCallback(
     }
 
     private suspend fun insertBeginnerYogaFlow() {
+        val database = databaseProvider()
         val workoutDao = database.workoutDao()
         val sectionDao = database.sectionDao()
         val timerDao = database.timerDao()
@@ -160,6 +163,7 @@ class DatabaseCallback(
     }
 
     private suspend fun insertAdvancedVinyasa() {
+        val database = databaseProvider()
         val workoutDao = database.workoutDao()
         val sectionDao = database.sectionDao()
         val timerDao = database.timerDao()

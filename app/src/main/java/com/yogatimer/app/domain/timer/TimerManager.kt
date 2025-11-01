@@ -1,6 +1,7 @@
 package com.yogatimer.app.domain.timer
 
 import com.yogatimer.app.domain.audio.SoundManager
+import com.yogatimer.app.domain.audio.TTSManager
 import com.yogatimer.app.domain.model.FlattenedTimer
 import com.yogatimer.app.domain.model.SectionProgress
 import com.yogatimer.app.domain.model.TimerState
@@ -40,7 +41,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class TimerManager @Inject constructor(
-    private val soundManager: SoundManager
+    private val soundManager: SoundManager,
+    private val ttsManager: TTSManager
 ) {
 
     private val _state = MutableStateFlow<TimerState>(TimerState.Idle)
@@ -70,6 +72,11 @@ class TimerManager @Inject constructor(
         flattenedTimers = workout.getAllTimersFlattened()
         currentTimerIndex = 0
         totalElapsedSeconds = 0
+
+        // Initialize TTS engine in background
+        scope.launch {
+            ttsManager.initialize()
+        }
 
         // Stay in Idle state - wait for explicit start
         _state.value = TimerState.Idle
@@ -184,6 +191,11 @@ class TimerManager @Inject constructor(
             totalSeconds = currentWorkout?.calculateTotalDuration() ?: 0
         )
 
+        // Announce timer name via TTS
+        timerScope?.launch {
+            ttsManager.announceTimer(flattenedTimer.timer.name)
+        }
+
         // Update state to Running
         _state.value = TimerState.Running(
             currentSection = flattenedTimer.section,
@@ -239,6 +251,12 @@ class TimerManager @Inject constructor(
             // All timers completed - reset to Idle so workout can be run again
             stopCountdown()
             _state.value = TimerState.Completed
+
+            // Announce workout completion
+            timerScope?.launch {
+                ttsManager.announceWorkoutComplete()
+            }
+
             currentWorkout = null
             flattenedTimers = emptyList()
             currentTimerIndex = 0
