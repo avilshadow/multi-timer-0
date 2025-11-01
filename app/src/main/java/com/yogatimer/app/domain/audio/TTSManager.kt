@@ -2,7 +2,6 @@ package com.yogatimer.app.domain.audio
 
 import android.content.Context
 import android.speech.tts.TextToSpeech
-import android.speech.tts.UtteranceProgressListener
 import com.yogatimer.app.domain.repository.SettingsRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -36,7 +35,12 @@ class TTSManager @Inject constructor(
         tts = TextToSpeech(context) { status ->
             isInitialized = status == TextToSpeech.SUCCESS
             if (isInitialized) {
-                configureTTS()
+                // Set default configuration
+                tts?.apply {
+                    setLanguage(Locale.getDefault())
+                    setSpeechRate(0.9f)
+                    setPitch(1.0f)
+                }
             }
             continuation.resume(isInitialized)
         }
@@ -80,6 +84,9 @@ class TTSManager @Inject constructor(
             initialize()
         }
 
+        // Configure TTS with latest settings before speaking
+        configureTTS()
+
         tts?.speak(
             timerName,
             TextToSpeech.QUEUE_FLUSH,
@@ -105,6 +112,9 @@ class TTSManager @Inject constructor(
         if (!isInitialized) {
             initialize()
         }
+
+        // Configure TTS with latest settings before speaking
+        configureTTS()
 
         val announcement = if (totalRepeats > 1) {
             "$sectionName, repeat $currentRepeat of $totalRepeats"
@@ -133,6 +143,9 @@ class TTSManager @Inject constructor(
         if (!isInitialized) {
             initialize()
         }
+
+        // Configure TTS with latest settings before speaking
+        configureTTS()
 
         tts?.speak(
             "Workout complete! Great job!",
