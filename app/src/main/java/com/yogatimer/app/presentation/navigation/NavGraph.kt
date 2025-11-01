@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.yogatimer.app.presentation.create.CreateWorkoutScreen
 import com.yogatimer.app.presentation.home.HomeScreen
+import com.yogatimer.app.presentation.settings.SettingsScreen
 import com.yogatimer.app.presentation.timer.ActiveTimerScreen
 
 /**
@@ -96,10 +97,9 @@ fun AppNavGraph(
 
         // Settings Screen
         composable(NavRoutes.SETTINGS) {
-            // TODO: Implement SettingsScreen
-            // SettingsScreen(
-            //     onBack = { navController.popBackStack() }
-            // )
+            SettingsScreen(
+                onBack = { navController.popBackStack() }
+            )
         }
     }
 }

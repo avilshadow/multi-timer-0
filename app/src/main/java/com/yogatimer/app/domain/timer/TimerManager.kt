@@ -1,5 +1,6 @@
 package com.yogatimer.app.domain.timer
 
+import com.yogatimer.app.domain.audio.SoundManager
 import com.yogatimer.app.domain.model.FlattenedTimer
 import com.yogatimer.app.domain.model.SectionProgress
 import com.yogatimer.app.domain.model.TimerState
@@ -38,7 +39,9 @@ import javax.inject.Singleton
  * ```
  */
 @Singleton
-class TimerManager @Inject constructor() {
+class TimerManager @Inject constructor(
+    private val soundManager: SoundManager
+) {
 
     private val _state = MutableStateFlow<TimerState>(TimerState.Idle)
     val state: StateFlow<TimerState> = _state.asStateFlow()
@@ -216,7 +219,10 @@ class TimerManager @Inject constructor() {
                 }
             }
 
-            // Timer completed, move to next
+            // Timer completed - play sound
+            soundManager.playTimerCompletionSound()
+
+            // Move to next timer
             moveToNextTimer()
         }
     }
