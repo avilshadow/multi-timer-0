@@ -1,5 +1,3 @@
-import java.io.ByteArrayOutputStream
-
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -17,8 +15,13 @@ android {
         targetSdk = 35
 
         // Auto-increment version code based on git commit count
-        versionCode = getVersionCode()
-        versionName = "1.0.${getVersionCode()}"
+        // Use lazy evaluation to avoid configuration cache issues
+        val gitVersionCode = providers.exec {
+            commandLine("git", "rev-list", "--count", "HEAD")
+        }.standardOutput.asText.map { it.trim().toIntOrNull() ?: 1 }
+
+        versionCode = gitVersionCode.get()
+        versionName = "1.0.${gitVersionCode.get()}"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -123,23 +126,4 @@ dependencies {
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
-}
-
-/**
- * Get version code based on git commit count.
- * This ensures every new commit creates a higher version code for updates.
- */
-fun getVersionCode(): Int {
-    return try {
-        val stdout = ByteArrayOutputStream()
-        exec {
-            commandLine("git", "rev-list", "--count", "HEAD")
-            standardOutput = stdout
-        }
-        stdout.toString().trim().toInt()
-    } catch (e: Exception) {
-        // Fallback if git is not available
-        println("Warning: Could not get git commit count, using default version code 1")
-        1
-    }
 }
