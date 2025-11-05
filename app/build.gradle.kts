@@ -1,3 +1,5 @@
+import java.io.ByteArrayOutputStream
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -129,7 +131,7 @@ dependencies {
  */
 fun getVersionCode(): Int {
     return try {
-        val stdout = java.io.ByteArrayOutputStream()
+        val stdout = ByteArrayOutputStream()
         exec {
             commandLine("git", "rev-list", "--count", "HEAD")
             standardOutput = stdout
