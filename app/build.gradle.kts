@@ -13,8 +13,10 @@ android {
         applicationId = "com.yogatimer.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+
+        // Auto-increment version code based on git commit count
+        versionCode = getVersionCode()
+        versionName = "1.0.${getVersionCode()}"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -119,4 +121,23 @@ dependencies {
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+}
+
+/**
+ * Get version code based on git commit count.
+ * This ensures every new commit creates a higher version code for updates.
+ */
+fun getVersionCode(): Int {
+    return try {
+        val stdout = java.io.ByteArrayOutputStream()
+        exec {
+            commandLine("git", "rev-list", "--count", "HEAD")
+            standardOutput = stdout
+        }
+        stdout.toString().trim().toInt()
+    } catch (e: Exception) {
+        // Fallback if git is not available
+        println("Warning: Could not get git commit count, using default version code 1")
+        1
+    }
 }
