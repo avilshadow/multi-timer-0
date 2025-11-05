@@ -172,10 +172,9 @@ class ActiveTimerViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        // Stop timer when ViewModel is cleared (user navigates away)
-        if (timerManager.state.value.isActive()) {
-            timerManager.stop()
-        }
+        // Always stop timer when ViewModel is cleared to ensure clean state
+        // This handles both active workouts and completed workouts
+        timerManager.stop()
     }
 }
 

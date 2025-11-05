@@ -248,20 +248,24 @@ class TimerManager @Inject constructor(
         currentTimerIndex++
 
         if (currentTimerIndex >= flattenedTimers.size) {
-            // All timers completed - reset to Idle so workout can be run again
+            // All timers completed
             stopCountdown()
-            _state.value = TimerState.Completed
 
             // Announce workout completion
             timerScope?.launch {
                 ttsManager.announceWorkoutComplete()
             }
 
+            // Set to completed state
+            _state.value = TimerState.Completed
+
+            // Clear workout data but keep manager in a valid state
             currentWorkout = null
             flattenedTimers = emptyList()
             currentTimerIndex = 0
             remainingSeconds = 0
             totalElapsedSeconds = 0
+            // Don't clear timerScope yet - let it be cleared when stop() or loadWorkout() is called
         } else {
             // Start next timer
             startCurrentTimer()

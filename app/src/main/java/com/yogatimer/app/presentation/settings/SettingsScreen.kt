@@ -1,5 +1,7 @@
 package com.yogatimer.app.presentation.settings
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,7 +14,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,6 +30,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -103,6 +111,14 @@ fun SettingsScreen(
             )
 
             if (settings.enableSoundEffects) {
+                Spacer(modifier = Modifier.height(16.dp))
+
+                SettingsSoundSelector(
+                    title = "Completion Sound",
+                    currentSound = settings.completionSoundUri,
+                    onSoundSelected = viewModel::updateCompletionSound
+                )
+
                 Spacer(modifier = Modifier.height(16.dp))
 
                 SettingsSliderItem(
@@ -229,5 +245,74 @@ private fun SettingsSliderItem(
             valueRange = valueRange,
             steps = steps
         )
+    }
+}
+
+@Composable
+private fun SettingsSoundSelector(
+    title: String,
+    currentSound: String,
+    onSoundSelected: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    // Sound options
+    val soundOptions = listOf(
+        "system_default" to "Default",
+        "notification" to "Notification",
+        "alarm" to "Alarm",
+        "ringtone" to "Ringtone"
+    )
+
+    val currentSoundLabel = soundOptions.find { it.first == currentSound }?.second ?: "Default"
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Medium
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Box {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = true }
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = currentSoundLabel,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f)
+                )
+
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = "Select sound"
+                )
+            }
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                soundOptions.forEach { (soundUri, label) ->
+                    DropdownMenuItem(
+                        text = { Text(label) },
+                        onClick = {
+                            onSoundSelected(soundUri)
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
     }
 }

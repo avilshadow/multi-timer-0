@@ -121,7 +121,7 @@ class SoundManager @Inject constructor(
      */
     private fun getSoundUri(soundUriString: String): Uri {
         return when (soundUriString) {
-            "system_default" -> RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            "system_default", "notification" -> RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
             "alarm" -> RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
             "ringtone" -> RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
             else -> {
