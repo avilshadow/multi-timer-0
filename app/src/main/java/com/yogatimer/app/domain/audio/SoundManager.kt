@@ -51,18 +51,20 @@ class SoundManager @Inject constructor(
             Log.d(TAG, "Playing completion sound: ${settings.completionSoundUri}, URI: $soundUri")
 
             // Create and play ringtone
-            ringtone = RingtoneManager.getRingtone(context, soundUri)?.apply {
-                audioAttributes = AudioAttributes.Builder()
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
-                    .build()
+            ringtone = RingtoneManager.getRingtone(context, soundUri)
 
-                // Set volume (note: Ringtone doesn't support volume directly on all Android versions)
-                // Volume is controlled by system notification volume
+            if (ringtone != null) {
+                ringtone?.apply {
+                    val attrs = AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
+                        .build()
 
-                play()
+                    setAudioAttributes(attrs)
+                    play()
+                }
                 Log.d(TAG, "Sound playing successfully")
-            } ?: run {
+            } else {
                 Log.e(TAG, "Failed to create Ringtone from URI: $soundUri")
             }
         } catch (e: Exception) {
@@ -85,12 +87,14 @@ class SoundManager @Inject constructor(
 
             val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
-            ringtone = RingtoneManager.getRingtone(context, soundUri)?.apply {
-                audioAttributes = AudioAttributes.Builder()
+            ringtone = RingtoneManager.getRingtone(context, soundUri)
+            ringtone?.apply {
+                val attrs = AudioAttributes.Builder()
                     .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                     .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
                     .build()
 
+                setAudioAttributes(attrs)
                 play()
             }
         } catch (e: Exception) {
