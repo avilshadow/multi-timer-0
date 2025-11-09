@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -22,6 +23,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
@@ -121,13 +123,21 @@ fun SettingsScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                SettingsSliderItem(
-                    title = "Volume",
-                    value = settings.soundVolume,
-                    valueRange = 0f..1f,
-                    steps = 9, // 0%, 10%, 20%, ..., 100%
-                    onValueChange = viewModel::updateSoundVolume,
-                    valueLabel = { "${(it * 100).roundToInt()}%" }
+                // Test sound button
+                OutlinedButton(
+                    onClick = { viewModel.testSound() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Test Sound")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Note: Volume is controlled by your device's notification volume",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 4.dp)
                 )
             }
 

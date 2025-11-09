@@ -2,6 +2,7 @@ package com.yogatimer.app.presentation.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.yogatimer.app.domain.audio.SoundManager
 import com.yogatimer.app.domain.model.Settings
 import com.yogatimer.app.domain.model.Theme
 import com.yogatimer.app.domain.usecase.settings.GetSettingsUseCase
@@ -19,7 +20,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val getSettingsUseCase: GetSettingsUseCase,
-    private val updateSettingsUseCase: UpdateSettingsUseCase
+    private val updateSettingsUseCase: UpdateSettingsUseCase,
+    private val soundManager: SoundManager
 ) : ViewModel() {
 
     private val _settings = MutableStateFlow(Settings())
@@ -71,6 +73,12 @@ class SettingsViewModel @Inject constructor(
 
     fun updateShowLockScreenControls(enabled: Boolean) {
         updateSettings { it.copy(showLockScreenControls = enabled) }
+    }
+
+    fun testSound() {
+        viewModelScope.launch {
+            soundManager.playTimerCompletionSound()
+        }
     }
 
     private fun updateSettings(update: (Settings) -> Settings) {

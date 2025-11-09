@@ -2,12 +2,12 @@ package com.yogatimer.app.domain.audio
 
 import android.content.Context
 import android.media.AudioAttributes
-import android.media.MediaPlayer
+import android.media.Ringtone
 import android.media.RingtoneManager
 import android.net.Uri
+import android.util.Log
 import com.yogatimer.app.domain.repository.SettingsRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -18,7 +18,7 @@ import javax.inject.Singleton
  * - Plays completion sound when timer finishes
  * - Respects user sound settings (enable/disable, volume)
  * - Uses system default notification sound or custom sound
- * - Manages MediaPlayer lifecycle
+ * - Manages Ringtone lifecycle
  */
 @Singleton
 class SoundManager @Inject constructor(
@@ -26,7 +26,7 @@ class SoundManager @Inject constructor(
     private val settingsRepository: SettingsRepository
 ) {
 
-    private var mediaPlayer: MediaPlayer? = null
+    private var ringtone: Ringtone? = null
 
     /**
      * Play the timer completion sound.
@@ -34,47 +34,39 @@ class SoundManager @Inject constructor(
      * Checks settings and plays appropriate sound if enabled.
      */
     suspend fun playTimerCompletionSound() {
-        val settings = settingsRepository.getSettingsSync()
-
-        // Check if sound effects are enabled
-        if (!settings.enableSoundEffects) {
-            return
-        }
-
         try {
-            // Release any existing player
-            releaseMediaPlayer()
+            val settings = settingsRepository.getSettingsSync()
+
+            // Check if sound effects are enabled
+            if (!settings.enableSoundEffects) {
+                Log.d(TAG, "Sound effects disabled in settings")
+                return
+            }
+
+            // Stop any currently playing sound
+            stopCurrentSound()
 
             // Get sound URI
             val soundUri = getSoundUri(settings.completionSoundUri)
+            Log.d(TAG, "Playing completion sound: ${settings.completionSoundUri}, URI: $soundUri")
 
-            // Create and configure MediaPlayer
-            mediaPlayer = MediaPlayer().apply {
-                setAudioAttributes(
-                    AudioAttributes.Builder()
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                        .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
-                        .build()
-                )
+            // Create and play ringtone
+            ringtone = RingtoneManager.getRingtone(context, soundUri)?.apply {
+                audioAttributes = AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
+                    .build()
 
-                setDataSource(context, soundUri)
-                setVolume(settings.soundVolume, settings.soundVolume)
+                // Set volume (note: Ringtone doesn't support volume directly on all Android versions)
+                // Volume is controlled by system notification volume
 
-                setOnCompletionListener {
-                    releaseMediaPlayer()
-                }
-
-                setOnErrorListener { _, _, _ ->
-                    releaseMediaPlayer()
-                    true
-                }
-
-                prepare()
-                start()
+                play()
+                Log.d(TAG, "Sound playing successfully")
+            } ?: run {
+                Log.e(TAG, "Failed to create Ringtone from URI: $soundUri")
             }
         } catch (e: Exception) {
-            // Silently fail - don't crash the app if sound doesn't play
-            releaseMediaPlayer()
+            Log.e(TAG, "Error playing completion sound", e)
         }
     }
 
@@ -82,37 +74,27 @@ class SoundManager @Inject constructor(
      * Play a short beep sound (for warnings, etc.).
      */
     suspend fun playBeepSound() {
-        val settings = settingsRepository.getSettingsSync()
-
-        if (!settings.enableSoundEffects) {
-            return
-        }
-
         try {
-            releaseMediaPlayer()
+            val settings = settingsRepository.getSettingsSync()
+
+            if (!settings.enableSoundEffects) {
+                return
+            }
+
+            stopCurrentSound()
 
             val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
-            mediaPlayer = MediaPlayer().apply {
-                setAudioAttributes(
-                    AudioAttributes.Builder()
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                        .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
-                        .build()
-                )
+            ringtone = RingtoneManager.getRingtone(context, soundUri)?.apply {
+                audioAttributes = AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
+                    .build()
 
-                setDataSource(context, soundUri)
-                setVolume(settings.soundVolume * 0.5f, settings.soundVolume * 0.5f) // Quieter beep
-
-                setOnCompletionListener {
-                    releaseMediaPlayer()
-                }
-
-                prepare()
-                start()
+                play()
             }
         } catch (e: Exception) {
-            releaseMediaPlayer()
+            Log.e(TAG, "Error playing beep sound", e)
         }
     }
 
@@ -120,7 +102,7 @@ class SoundManager @Inject constructor(
      * Get the appropriate sound URI based on settings.
      */
     private fun getSoundUri(soundUriString: String): Uri {
-        return when (soundUriString) {
+        val uri = when (soundUriString) {
             "system_default", "notification" -> RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
             "alarm" -> RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
             "ringtone" -> RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
@@ -129,29 +111,43 @@ class SoundManager @Inject constructor(
                 try {
                     Uri.parse(soundUriString)
                 } catch (e: Exception) {
+                    Log.w(TAG, "Invalid URI string: $soundUriString, using default", e)
                     RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
                 }
             }
         }
+
+        Log.d(TAG, "Sound URI for '$soundUriString': $uri")
+        return uri
     }
 
     /**
-     * Release MediaPlayer resources.
+     * Stop any currently playing sound.
      */
-    private fun releaseMediaPlayer() {
-        mediaPlayer?.apply {
+    private fun stopCurrentSound() {
+        ringtone?.apply {
             if (isPlaying) {
                 stop()
             }
-            release()
         }
-        mediaPlayer = null
+        ringtone = null
+    }
+
+    /**
+     * Stop any current sound.
+     */
+    fun stop() {
+        stopCurrentSound()
     }
 
     /**
      * Clean up resources.
      */
     fun release() {
-        releaseMediaPlayer()
+        stopCurrentSound()
+    }
+
+    companion object {
+        private const val TAG = "SoundManager"
     }
 }
