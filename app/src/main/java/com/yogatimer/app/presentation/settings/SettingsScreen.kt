@@ -268,6 +268,7 @@ private fun SettingsSoundSelector(
 
     // Sound options
     val soundOptions = listOf(
+        "ding" to "Ding",
         "system_default" to "Default",
         "notification" to "Notification",
         "alarm" to "Alarm",

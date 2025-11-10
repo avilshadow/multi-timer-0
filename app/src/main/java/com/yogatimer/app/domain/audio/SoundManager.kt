@@ -110,6 +110,10 @@ class SoundManager @Inject constructor(
             "system_default", "notification" -> RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
             "alarm" -> RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
             "ringtone" -> RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+            "ding" -> {
+                // Custom ding sound from raw resources
+                Uri.parse("android.resource://${context.packageName}/raw/ding")
+            }
             else -> {
                 // Try to parse as URI, fallback to default if invalid
                 try {

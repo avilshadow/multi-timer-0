@@ -9,7 +9,7 @@ data class Settings(
     val enableTTS: Boolean = true,
     val ttsLanguage: String = "en-US",
     val enableSoundEffects: Boolean = true,
-    val completionSoundUri: String = "system_default",
+    val completionSoundUri: String = "ding",
     val soundVolume: Float = 0.7f, // 0.0 to 1.0
 
     // Haptic Settings
