@@ -56,8 +56,8 @@ class SoundManager @Inject constructor(
             if (ringtone != null) {
                 ringtone?.apply {
                     val attrs = AudioAttributes.Builder()
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                        .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
                         .build()
 
                     setAudioAttributes(attrs)
@@ -90,8 +90,8 @@ class SoundManager @Inject constructor(
             ringtone = RingtoneManager.getRingtone(context, soundUri)
             ringtone?.apply {
                 val attrs = AudioAttributes.Builder()
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
                     .build()
 
                 setAudioAttributes(attrs)
